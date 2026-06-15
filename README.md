@@ -51,8 +51,6 @@ docker compose up -d --build
 ブラウザで http://localhost:8080/register.php からユーザー登録後、利用できます。
 
 ### 停止
-
-```bash
 docker compose down      # コンテナ停止
 docker compose down -v   # DB ボリュームも削除（初期化）
 ```
