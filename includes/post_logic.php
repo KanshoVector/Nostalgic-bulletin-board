@@ -122,12 +122,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $_SESSION['error'] = "ファイルサイズが大きすぎます（最大5MB）。";
             } else {
                 $new_filename = time() . '_' . getmypid() . '.' . pathinfo($_FILES['new_file_data']['name'], PATHINFO_EXTENSION);
-                $upload_path = "uploads/" . $new_filename;
+                ensure_uploads_dir();
+                $upload_path = upload_file_path($new_filename);
 
-                if (move_uploaded_file($_FILES['new_file_data']['tmp_name'], $upload_path)) {
-                    // 古い画像を削除 (安全のため、ファイルが存在するか確認)
-                    if (!empty($old_image_filename) && file_exists("uploads/" . $old_image_filename)) {
-                        unlink("uploads/" . $old_image_filename);
+                if ($upload_path !== null && move_uploaded_file($_FILES['new_file_data']['tmp_name'], $upload_path)) {
+                    if (!empty($old_image_filename) && upload_file_exists($old_image_filename)) {
+                        $old_path = upload_file_path($old_image_filename);
+                        if ($old_path !== null) {
+                            unlink($old_path);
+                        }
                     }
                     $update_sql .= ", filename = $" . (++$param_count);
                     $params[] = $new_filename;

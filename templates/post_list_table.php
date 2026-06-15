@@ -28,9 +28,12 @@ if (!defined('VIEW_FILE_INCLUDED')) {
                 <div class="mt-2 text-xs text-slate-500">投稿者: <?php echo htmlspecialchars($post['author_username']); ?></div>
               </td>
               <td class="px-4 py-4 text-center">
-                <?php if (!empty($post['filename']) && file_exists('uploads/' . $post['filename'])): ?>
-                  <img src="uploads/<?php echo htmlspecialchars($post['filename']); ?>"
-                       data-src="uploads/<?php echo htmlspecialchars($post['filename']); ?>"
+                <?php
+                $image_url = upload_public_url($post['filename'] ?? null);
+                if ($image_url !== null && upload_file_exists($post['filename'])):
+                ?>
+                  <img src="<?php echo htmlspecialchars($image_url, ENT_QUOTES, 'UTF-8'); ?>"
+                       data-src="<?php echo htmlspecialchars($image_url, ENT_QUOTES, 'UTF-8'); ?>"
                        alt="投稿画像"
                        class="post-image mx-auto max-h-24 max-w-[7rem] cursor-pointer rounded-lg border border-slate-200 object-cover shadow-sm transition hover:scale-105">
                 <?php else: ?>

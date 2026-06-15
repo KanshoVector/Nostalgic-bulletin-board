@@ -79,9 +79,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $filename_base = time() . '_' . getmypid();
                     $file_extension = pathinfo($_FILES['file_data']['name'], PATHINFO_EXTENSION);
                     $new_filename = $filename_base . '.' . $file_extension;
-                    $upload_path = "uploads/" . $new_filename; // uploadsディレクトリは事前に作成しておく
+                    ensure_uploads_dir();
+                    $upload_path = upload_file_path($new_filename);
 
-                    if (!move_uploaded_file($_FILES['file_data']['tmp_name'], $upload_path)) {
+                    if ($upload_path === null || !move_uploaded_file($_FILES['file_data']['tmp_name'], $upload_path)) {
                         $error = "ファイルのアップロードに失敗しました。";
                         // 詳細なエラーログ（サーバーのログファイルに出力される）
                         error_log("Failed to move uploaded file: " . $_FILES['file_data']['tmp_name'] . " to " . $upload_path);
@@ -122,8 +123,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = "投稿に失敗しました: " . pg_last_error($dbconn);
             // データベース挿入失敗時にアップロードされたファイルを削除 (任意だが推奨)
-            if ($uploaded_filename_for_db && file_exists("uploads/" . $uploaded_filename_for_db)) {
-                unlink("uploads/" . $uploaded_filename_for_db);
+            if ($uploaded_filename_for_db && upload_file_exists($uploaded_filename_for_db)) {
+                $delete_path = upload_file_path($uploaded_filename_for_db);
+                if ($delete_path !== null) {
+                    unlink($delete_path);
+                }
             }
         }
     }

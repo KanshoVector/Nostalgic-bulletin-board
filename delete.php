@@ -39,9 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($res_delete) {
                     // データベースから削除成功した場合、関連するファイルも削除
-                    if ($filename_to_delete && file_exists("uploads/" . $filename_to_delete)) {
-                        unlink("uploads/" . $filename_to_delete);
-                        error_log("Deleted file: uploads/" . $filename_to_delete); // ログ出力
+                    if ($filename_to_delete && upload_file_exists($filename_to_delete)) {
+                        $delete_path = upload_file_path($filename_to_delete);
+                        if ($delete_path !== null) {
+                            unlink($delete_path);
+                            error_log('Deleted file: ' . $delete_path);
+                        }
                     }
                     $message = "投稿を削除しました。";
                 } else {

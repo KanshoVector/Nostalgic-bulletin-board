@@ -57,8 +57,11 @@ if (!isset($post_to_edit)) {
 
     <div>
       <p class="mb-2 text-sm font-medium text-slate-700">現在の画像</p>
-      <?php if (!empty($post_to_edit['filename']) && file_exists('uploads/' . $post_to_edit['filename'])): ?>
-        <img src="uploads/<?php echo htmlspecialchars($post_to_edit['filename'], ENT_QUOTES, 'UTF-8'); ?>"
+      <?php
+      $edit_image_url = upload_public_url($post_to_edit['filename'] ?? null);
+      if ($edit_image_url !== null && upload_file_exists($post_to_edit['filename'])):
+      ?>
+        <img src="<?php echo htmlspecialchars($edit_image_url, ENT_QUOTES, 'UTF-8'); ?>"
              alt="現在の画像"
              class="mx-auto max-h-48 rounded-xl border border-slate-200 object-contain shadow-sm">
       <?php else: ?>
