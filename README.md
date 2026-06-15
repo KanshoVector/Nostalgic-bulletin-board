@@ -1,99 +1,130 @@
-# 投稿型懐古アプリ (位置情報連動型メディアログ)
+# Nostalgic Bulletin Board
 
-位置情報・メモ・画像を紐づけて記録・公開できる Web 掲示板アプリです。
+位置情報・メモ・画像を紐づけて記録・公開できる Web 掲示板です。  
+PHP と PostgreSQL のみで動作し、Docker Compose でローカル検証できます。
 
-## 稼働 URL
+## デモ
 
-**本番:** https://muds.gdl.jp/~s2422073/login.php
-
-| 項目 | 値 |
+| 環境 | URL |
 |---|---|
-| テストアカウント | `r` / `r` |
+| 本番（大学サーバー） | https://muds.gdl.jp/~s2422073/login.php |
 
-## 開発の背景
+> 本番のテスト用アカウント情報はリポジトリには含めません。必要な場合は運用者に問い合わせてください。
 
-ゼミの要件として大学サーバー（muds.gdl.jp）にホスティングしています。  
-企画・設計・バックエンド実装は自主制作として、3 人チームのリードとして自発的に進めたプロジェクトです。
+## 機能
 
-## 技術スタック
+- ユーザー登録 / ログイン
+- 位置情報付き投稿（メモ・画像・公開 / 非公開）
+- 投稿一覧・検索・編集・削除
+- コメント
 
-| レイヤ | 構成 |
+## 技術構成
+
+| 項目 | 内容 |
 |---|---|
-| バックエンド | PHP 8.x（メイン処理） |
-| データベース | PostgreSQL（認証・投稿・コメント） |
-| フロントエンド | HTML / CSS / JavaScript（素のコード） |
-| ローカル検証 | Docker Compose（PHP 8.2-apache + PostgreSQL 16） |
+| バックエンド | PHP 8.x |
+| DB | PostgreSQL |
+| UI | Tailwind CSS（CDN） |
+| ローカル | Docker Compose（PHP 8.2-apache + PostgreSQL 16） |
 
-## インフラの工夫
-
-- **Docker Compose 同梱** — 他者が手元で 1 コマンドで動作検証できる構成
-- **ハイブリッド DB 接続** — `includes/db_connection.php` が接続先を自動判定
-  - 環境変数あり（ローカル Docker）→ `.env` / Compose 注入値を使用
-  - 環境変数なし（大学サーバー）→ Git 管理外の `db_config_local.php` を読み込み
-- **Credential Leak 対策** — 大学 DB のパスワード等はリポジトリに含めず、サーバー側の除外ファイルにのみ保持
-- 大学サーバーへは **PHP ファイルをそのまま上書きアップロード** 可能（`db_config_local.php` は初回配置後そのまま残す）
-
-## 品質保証
-
-GitHub Actions により、コミット・PR 時に全 PHP ファイルの構文チェック（`php -l`）を自動実行します。
-
-## ローカル起動手順
+## ローカル起動
 
 ```bash
-# 1. リポジトリのクローンと移動
 git clone https://github.com/KanshoVector/Nostalgic-bulletin-board.git
 cd Nostalgic-bulletin-board
-
-# 2. 環境変数ファイルの準備
 cp .env.example .env
 docker compose up -d --build
 ```
 
-ブラウザで http://localhost:8080/register.php からユーザー登録後、利用できます。
-
-### 停止
+http://localhost:8080/register.php から利用できます。
 
 ```bash
-docker compose down      # コンテナ停止
-docker compose down -v   # DB ボリュームも削除（初期化）
+docker compose down      # 停止
+docker compose down -v   # DB も初期化
 ```
 
-## ディレクトリ構成（主要ファイル）
+## 大学サーバーへのデプロイ
 
-```
-├── index.php                  # 投稿フォーム（要ログイン）
-├── login.php / register.php
-├── view.php                   # 投稿一覧・コメント
-├── db_config_local.php.example # 大学サーバー用設定テンプレート（Git 管理）
-├── includes/
-│   └── db_connection.php      # ハイブリッド DB 接続（pg + PDO）
-├── init.sql                   # Docker 初回起動時のスキーマ
-├── Dockerfile
-└── docker-compose.yml
-```
+### 初回のみ（DB 接続設定）
 
-## 自分用：大学サーバーへのアップロード
-
-### 1 回限りの初期設定（必須）
-
-大学サーバーは環境変数を設定できない共有環境のため、**Git 管理外の設定ファイルを 1 度だけ手動配置**します。
+大学サーバーでは環境変数が使えないため、`db_config_local.php` を **1 回だけ** 配置します。
 
 ```bash
-# ローカルでテンプレートをコピー
 cp db_config_local.php.example db_config_local.php
+# pass を大学 PostgreSQL のパスワードに書き換える
 ```
 
-`db_config_local.php` を大学サーバーの **`db.php` と同じ階層（public_html 直下）** にアップロードし、接続情報を記述します。
+`db_config_local.php` を **`db.php` と同じ階層** にアップロードしてください。  
+このファイルは Git 管理外です。**再アップロードしないでください。**
 
-> **セキュリティ:** このファイルは `.gitignore` により GitHub には送信されません。  
-> アプリ本体（`.php`）を何度上書きアップロードしても、`db_config_local.php` はサーバー上に残る限り DB 接続は維持されます。
+### 更新時にアップロードするファイル
 
-### 通常アップロード（初回設定後）
+```
+db.php
+image.php                 # 画像配信（必須）
+index.php
+login.php
+logout.php
+register.php
+upload.php
+view.php
+delete.php
+includes/bootstrap.php
+includes/db_connection.php
+includes/layout.php
+includes/upload_paths.php
+includes/upload_service.php
+includes/view_controller.php
+templates/post_list.php
+templates/post_edit_form.php
+templates/comment_section.php
+uploads/.htaccess         # 初回または未配置の場合
+```
 
-Cyberduck 等で以下をアップロード（`.env` / `db_config_local.php` の再アップロードは不要）。
+`uploads/` ディレクトリ本体は必要です（書き込み権限必須）。**既存の画像ファイルは削除しないでください。**
 
-- ルート配下の `.php` ファイル
-- `includes/` / `templates/` ディレクトリ
-- `uploads/` ディレクトリ（書き込み権限が必要）
+### アップロード不要
 
-**アップロード不要:** `Dockerfile`, `docker-compose.yml`, `.env`, `.github/`, `db_config_local.php.example`
+`Dockerfile`, `docker-compose.yml`, `.env`, `init.sql`, `.github/`, `README.md`
+
+## 画像が表示されない場合
+
+1. DB にファイル名があるか確認する  
+   `SELECT id, filename FROM location_diary WHERE filename IS NOT NULL LIMIT 10;`
+2. サーバーの `uploads/` に同名ファイルがあるか確認する
+3. `image.php` をアップロードしているか確認する（画像 URL は `image.php?f=...` 形式）
+4. DB に名前があっても `uploads/` 内の実ファイルが無い場合は復元できません
+
+## ディレクトリ構成
+
+```
+├── db.php                     # エントリポイント
+├── image.php                  # 画像配信
+├── index.php / login.php …    # 画面
+├── includes/
+│   ├── bootstrap.php          # 認証・共通関数
+│   ├── db_connection.php      # DB 接続
+│   ├── layout.php             # レイアウト
+│   ├── upload_paths.php       # uploads パス解決
+│   ├── upload_service.php     # 画像アップロード
+│   └── view_controller.php    # 一覧・編集・コメント
+├── templates/                 # 部分テンプレート
+├── uploads/                   # ユーザー画像（Git 管理外）
+└── docker-compose.yml         # ローカル検証用
+```
+
+## DB 接続の仕組み
+
+1. `POSTGRES_*` 環境変数がある → Docker 用 DB
+2. ない → `db_config_local.php` を読み込み（大学サーバー）
+3. どちらもない → エラー
+
+## セキュリティ上の注意
+
+- DB パスワードは `db_config_local.php` にのみ保持し、Git に含めない
+- パスワードは `password_hash` で保存（既存の平文パスワードはログイン時に自動移行）
+- 画像は `image.php` 経由で MIME タイプを検証して配信
+
+## ライセンス / 利用
+
+学内プロジェクトとして開発されています。再利用・改変は README と LICENSE の範囲で行ってください。

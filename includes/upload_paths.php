@@ -1,9 +1,30 @@
 <?php
-/**
- * uploads/ ディレクトリのパス解決
- * 相対パスの file_exists はサーバー環境で CWD が異なると失敗するため、
- * アプリルート基準の絶対パスで判定する。
- */
+
+declare(strict_types=1);
+
+function upload_public_url(?string $filename): ?string
+{
+    $normalized = normalize_upload_filename($filename);
+    if ($normalized === null) {
+        return null;
+    }
+
+    return 'image.php?f=' . rawurlencode($normalized);
+}
+
+function upload_file_exists(?string $filename): bool
+{
+    $path = upload_file_path($filename);
+    return $path !== null && is_readable($path) && is_file($path);
+}
+
+function ensure_uploads_dir(): void
+{
+    $dir = uploads_base_dir();
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+}
 
 function uploads_base_dir(): string
 {
@@ -12,8 +33,8 @@ function uploads_base_dir(): string
         return $dir;
     }
 
-    $candidate = realpath(__DIR__ . '/../uploads');
-    $dir = $candidate !== false ? $candidate : __DIR__ . '/../uploads';
+    $resolved = realpath(__DIR__ . '/../uploads');
+    $dir = $resolved !== false ? $resolved : __DIR__ . '/../uploads';
 
     return $dir;
 }
@@ -24,22 +45,20 @@ function normalize_upload_filename(?string $filename): ?string
         return null;
     }
 
-    $filename = trim($filename);
+    $filename = trim(str_replace('\\', '/', $filename));
     if ($filename === '') {
         return null;
     }
 
-    $filename = str_replace('\\', '/', $filename);
     if (str_starts_with($filename, './')) {
         $filename = substr($filename, 2);
     }
-
     if (str_starts_with($filename, 'uploads/')) {
-        $filename = substr($filename, strlen('uploads/'));
+        $filename = substr($filename, 8);
     }
 
     $basename = basename($filename);
-    return $basename !== '' ? $basename : null;
+    return $basename !== '' && $basename !== '.' ? $basename : null;
 }
 
 function upload_file_path(?string $filename): ?string
@@ -50,41 +69,4 @@ function upload_file_path(?string $filename): ?string
     }
 
     return uploads_base_dir() . DIRECTORY_SEPARATOR . $normalized;
-}
-
-function upload_file_exists(?string $filename): bool
-{
-    $path = upload_file_path($filename);
-    return $path !== null && is_file($path);
-}
-
-function upload_public_url(?string $filename): ?string
-{
-    $normalized = normalize_upload_filename($filename);
-    if ($normalized === null) {
-        return null;
-    }
-
-    $segments = explode('/', $normalized);
-    $encoded = array_map('rawurlencode', $segments);
-
-    return 'uploads/' . implode('/', $encoded);
-}
-
-function upload_relative_path(?string $filename): ?string
-{
-    $normalized = normalize_upload_filename($filename);
-    if ($normalized === null) {
-        return null;
-    }
-
-    return 'uploads/' . $normalized;
-}
-
-function ensure_uploads_dir(): void
-{
-    $dir = uploads_base_dir();
-    if (!is_dir($dir)) {
-        mkdir($dir, 0755, true);
-    }
 }

@@ -16,3 +16,4 @@ docker/db_data/
 # アップロード済みユーザー画像
 uploads/*
 !uploads/.gitkeep
+!uploads/.htaccess

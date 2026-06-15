@@ -1,0 +1,7 @@
+Options -Indexes
+<FilesMatch "\.(?i:jpe?g|png|gif)$">
+  Require all granted
+</FilesMatch>
+<FilesMatch "\.php$">
+  Require all denied
+</FilesMatch>
