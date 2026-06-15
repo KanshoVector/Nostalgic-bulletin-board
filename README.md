@@ -41,16 +41,19 @@ GitHub Actions により、コミット・PR 時に全 PHP ファイルの構文
 
 ```bash
 # 1. リポジトリのクローンと移動
-git clone [https://github.com/KanshoVector/Nostalgic-bulletin-board.git](https://github.com/KanshoVector/Nostalgic-bulletin-board.git)
+git clone https://github.com/KanshoVector/Nostalgic-bulletin-board.git
 cd Nostalgic-bulletin-board
 
 # 2. 環境変数ファイルの準備
 cp .env.example .env
 docker compose up -d --build
+```
 
 ブラウザで http://localhost:8080/register.php からユーザー登録後、利用できます。
 
 ### 停止
+
+```bash
 docker compose down      # コンテナ停止
 docker compose down -v   # DB ボリュームも削除（初期化）
 ```

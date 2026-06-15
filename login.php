@@ -1,141 +1,58 @@
 <?php
 require_once("db.php");
 
-// POST送信時のログイン処理（HTMLより前に書く）
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $username = trim($_POST['username']);
-  $password = trim($_POST['password']);
+$error = null;
 
-  // パラメータ化クエリを使用し、SQLインジェクションを防止
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $username = trim($_POST['username'] ?? '');
+  $password = trim($_POST['password'] ?? '');
+
   $res = pg_query_params($dbconn, "SELECT id FROM users WHERE username = $1 AND password = $2", [$username, $password]);
   if ($row = pg_fetch_assoc($res)) {
     $_SESSION['user_id'] = $row['id'];
     header("Location: index.php");
     exit;
   } else {
-    $error = "ログインに失敗しました。";
+    $error = 'ログインに失敗しました。';
   }
 }
+
+$page_title = 'ログイン';
+$body_class = 'flex min-h-full items-center justify-center bg-gradient-to-br from-stone-100 via-slate-50 to-teal-50 px-4 py-12 text-slate-800 antialiased';
+require_once __DIR__ . '/includes/tailwind_head.php';
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>ログイン</title>
-  <style>
-    body {
-      font-family: 'Inter', 'Noto Sans JP', sans-serif; /* モダンなフォント */
-      background-color: #eef2f6; /* 落ち着いた背景色 */
-      display: flex; /* 中央寄せのため */
-      flex-direction: column; /* 垂直方向に並べる */
-      justify-content: center; /* 垂直方向の中央寄せ */
-      align-items: center; /* 水平方向の中央寄せ */
-      min-height: 100vh; /* ビューポートいっぱいの高さ */
-      margin: 0;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-    h2 {
-      color: #334a52; /* 濃い目の落ち着いた色 */
-      margin-bottom: 25px;
-      font-size: 1.8em;
-      font-weight: 600;
-      text-align: center; /* ここを追加・変更 */
-      width: 100%; /* 親要素の幅いっぱいに広げる */
-    }
-    form {
-      display: block; /* inline-blockからblockに変更 */
-      background: #ffffff;
-      padding: 40px 50px;
-      border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-      width: 100%;
-      max-width: 400px;
-      box-sizing: border-box;
-      margin: 0 auto; /* 中央寄せのため */
-    }
-    input[type=text], input[type=password] {
-      width: calc(100% - 20px);
-      padding: 12px 10px;
-      margin: 10px 0;
-      border: 1px solid #dcdfe6;
-      border-radius: 6px;
-      font-size: 1em;
-      color: #333;
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-    input[type=text]:focus, input[type=password]:focus {
-      border-color: #5b7e8d;
-      box-shadow: 0 0 0 3px rgba(91, 126, 141, 0.2);
-      outline: none;
-    }
-    input[type=submit] {
-      background-color: #334a52;
-      color: white;
-      padding: 12px 25px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1.1em;
-      font-weight: 500;
-      margin-top: 20px;
-      width: 100%;
-      transition: background-color 0.3s ease;
-    }
-    input[type=submit]:hover {
-      background-color: #273a42;
-    }
-    a {
-      color: #5b7e8d;
-      text-decoration: none;
-      display: block;
-      margin-top: 20px;
-      font-size: 0.95em;
-      transition: color 0.3s ease;
-      text-align: center;
-    }
-    a:hover {
-      color: #334a52;
-      text-decoration: underline;
-    }
-    p {
-      color: #555;
-      text-align: center;
-      margin-top: 15px;
-      font-size: 0.95em;
-    }
-    p.error-message { /* エラーメッセージ用のスタイル */
-      color: #e74c3c;
-      font-weight: bold;
-      margin-bottom: 15px;
-      text-align: center; /* エラーメッセージも中央寄せ */
-      width: 100%; /* 親要素の幅いっぱいに広げる */
-    }
+<div class="w-full max-w-md">
+  <div class="mb-8 text-center">
+    <p class="text-sm font-semibold uppercase tracking-wider text-teal-700">Nostalgic Board</p>
+    <h1 class="mt-2 text-3xl font-bold text-slate-800">ログイン</h1>
+    <p class="mt-2 text-sm text-slate-600">位置情報と思い出を記録する掲示板</p>
+  </div>
 
-    /* レスポンシブ対応 */
-    @media (max-width: 768px) {
-        form {
-            padding: 25px 30px;
-        }
-        input[type=text], input[type=password], input[type=submit] {
-            font-size: 0.9em;
-            padding: 10px;
-        }
-        h2 {
-            font-size: 1.5em;
-        }
-    }
-  </style>
-</head>
-<body>
-  <h2>ログインフォーム</h2>
-  <?php if (isset($error)) echo "<p class='error-message'>$error</p>"; ?>
-  <form method="post">
-    ユーザー名: <input type="text" name="username" required><br>
-    パスワード: <input type="password" name="password" required><br>
-    <input type="submit" value="ログイン">
-  </form>
-  <a href="register.php">→ 新規登録はこちら</a>
+  <div class="<?php echo $card_class; ?>">
+    <?php if ($error !== null): ?>
+      <div class="message-box error-message mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+        <?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?>
+      </div>
+    <?php endif; ?>
+
+    <form method="post" class="space-y-5">
+      <div>
+        <label for="username" class="mb-1.5 block text-sm font-medium text-slate-700">ユーザー名</label>
+        <input type="text" name="username" id="username" required class="<?php echo $input_class; ?>">
+      </div>
+      <div>
+        <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">パスワード</label>
+        <input type="password" name="password" id="password" required class="<?php echo $input_class; ?>">
+      </div>
+      <button type="submit" class="<?php echo $btn_primary; ?>">ログイン</button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-slate-600">
+      アカウントをお持ちでない方は
+      <a href="register.php" class="font-medium text-teal-700 hover:text-teal-800 hover:underline">新規登録</a>
+    </p>
+  </div>
+</div>
 </body>
 </html>

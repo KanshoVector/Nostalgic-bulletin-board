@@ -1,81 +1,89 @@
 <?php
-// PHPエラー表示を有効にする (デバッグ用。本番環境では無効にしてください)
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// 各ファイルが直接アクセスされないように定義
 define('VIEW_FILE_INCLUDED', true);
 
-require_once("db.php"); // DB接続とセッション開始
+require_once("db.php");
 
-// 未ログインの場合はログインページへリダイレクト
 if (!isset($_SESSION['user_id'])) {
   header("Location: login.php");
   exit;
 }
 
 $user_id = $_SESSION['user_id'];
-$message = ''; // ユーザーへのメッセージ
+$message = '';
 $error = '';
 
-// URLからのメッセージとエラーの取得 (リダイレクト時など)
 if (isset($_GET['message'])) {
-    $message .= htmlspecialchars(urldecode($_GET['message']));
+    $message .= htmlspecialchars(urldecode($_GET['message']), ENT_QUOTES, 'UTF-8');
 }
 if (isset($_GET['error'])) {
-    $error .= htmlspecialchars(urldecode($_GET['error']));
+    $error .= htmlspecialchars(urldecode($_GET['error']), ENT_QUOTES, 'UTF-8');
 }
 
-// セッションに保存されたメッセージがあれば表示
 if (isset($_SESSION['message'])) {
-    $message .= $_SESSION['message']; // 既存メッセージに追加
-    unset($_SESSION['message']); // 一度表示したら削除
+    $message .= $_SESSION['message'];
+    unset($_SESSION['message']);
 }
 if (isset($_SESSION['error'])) {
-    $error .= $_SESSION['error']; // 既存エラーに追加
-    unset($_SESSION['error']); // 一度表示したら削除
+    $error .= $_SESSION['error'];
+    unset($_SESSION['error']);
 }
 
-// コメント処理ロジックを読み込む（POSTアクションがある場合のみ実行される）
 require_once("includes/comment_logic.php");
-
-// 投稿表示・編集ロジックを読み込む
-require_once("includes/post_logic.php"); // このファイル内で投稿編集のPOST処理も行われる
-
-// ヘッダー部分を読み込む
+require_once("includes/post_logic.php");
 require_once("includes/header.php");
 ?>
 
 <?php if (!empty($message)): ?>
-  <div class="message-box success-message"><?php echo $message; ?></div>
+  <div class="message-box success-message mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+    <?php echo $message; ?>
+  </div>
 <?php endif; ?>
 <?php if (!empty($error)): ?>
-  <div class="message-box error-message"><?php echo $error; ?></div>
+  <div class="message-box error-message mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+    <?php echo $error; ?>
+  </div>
 <?php endif; ?>
 
-<?php if ($post_id_to_edit > 0 && $post_to_edit): // 編集モードの場合 ?>
+<?php if ($post_id_to_edit > 0 && $post_to_edit): ?>
   <?php require_once("templates/post_edit_form.php"); ?>
-<?php else: // 一覧モードの場合 ?>
-  <h2>投稿一覧</h2>
+<?php else: ?>
+  <div class="mb-6">
+    <h2 class="text-xl font-semibold text-slate-800">投稿一覧</h2>
+    <p class="mt-1 text-sm text-slate-600">自分の投稿や公開された投稿を確認・検索できます。</p>
+  </div>
 
-  <div class="controls">
-    <a href="?mode=my_posts<?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" class="<?php echo ($display_mode === 'my_posts' ? 'active' : ''); ?>">自分の投稿</a>
-    <a href="?mode=public<?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" class="<?php echo ($display_mode === 'public' ? 'active' : ''); ?>">公開された投稿</a>
-    <form method="get" style="display:inline-block; margin-left: 20px;">
-        <input type="hidden" name="mode" value="<?php echo htmlspecialchars($display_mode); ?>">
-        <input type="text" name="search" placeholder="キーワード検索..." value="<?php echo htmlspecialchars($search_query); ?>" style="width: 180px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 5px;">
-        <button type="submit" style="padding: 8px 12px; background-color: #5b7e8d; color: white; border: none; border-radius: 5px; cursor: pointer;">検索</button>
-        <?php if (!empty($search_query)): ?>
-            <a href="?mode=<?php echo htmlspecialchars($display_mode); ?>" style="background-color: #f0f2f5; color: #555; border: 1px solid #dcdfe6; margin-left: 5px;">クリア</a>
-        <?php endif; ?>
+  <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div class="flex flex-wrap gap-2">
+      <a href="?mode=my_posts<?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>"
+         class="<?php echo $display_mode === 'my_posts'
+           ? 'rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white shadow-sm'
+           : 'rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50'; ?>">
+        自分の投稿
+      </a>
+      <a href="?mode=public<?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>"
+         class="<?php echo $display_mode === 'public'
+           ? 'rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white shadow-sm'
+           : 'rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50'; ?>">
+        公開された投稿
+      </a>
+    </div>
+
+    <form method="get" class="flex flex-wrap items-center gap-2">
+      <input type="hidden" name="mode" value="<?php echo htmlspecialchars($display_mode, ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="text" name="search" placeholder="キーワード検索..." value="<?php echo htmlspecialchars($search_query, ENT_QUOTES, 'UTF-8'); ?>"
+             class="w-full min-w-[12rem] rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/20 sm:w-52">
+      <button type="submit" class="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-800">検索</button>
+      <?php if (!empty($search_query)): ?>
+        <a href="?mode=<?php echo htmlspecialchars($display_mode, ENT_QUOTES, 'UTF-8'); ?>" class="<?php echo $btn_secondary; ?>">クリア</a>
+      <?php endif; ?>
     </form>
   </div>
 
   <?php require_once("templates/post_list_table.php"); ?>
 <?php endif; ?>
 
-<?php
-// フッター部分を読み込む
-require_once("includes/footer.php");
-?>
+<?php require_once("includes/footer.php"); ?>
