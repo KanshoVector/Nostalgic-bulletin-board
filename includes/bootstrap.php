@@ -59,6 +59,13 @@ function pg_bool_is_true(mixed $value): bool
     return $value === true || $value === 't' || $value === '1' || $value === 1;
 }
 
+function password_is_hashed(string $stored): bool
+{
+    return str_starts_with($stored, '$2y$')
+        || str_starts_with($stored, '$2a$')
+        || str_starts_with($stored, '$argon2');
+}
+
 function verify_user_password($dbconn, string $username, string $password): ?int
 {
     $res = pg_query_params(
@@ -74,7 +81,7 @@ function verify_user_password($dbconn, string $username, string $password): ?int
     $stored = (string) $row['password'];
     $userId = (int) $row['id'];
 
-    if ($stored !== '' && password_get_info($stored)['algo'] !== 0) {
+    if (password_is_hashed($stored)) {
         return password_verify($password, $stored) ? $userId : null;
     }
 
