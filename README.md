@@ -40,11 +40,13 @@ GitHub Actions により、コミット・PR 時に全 PHP ファイルの構文
 ## ローカル起動手順
 
 ```bash
-git clone https://github.com/KanshoVector/Nostalgic-bulletin-board.git
+# 1. リポジトリのクローンと移動
+git clone [https://github.com/KanshoVector/Nostalgic-bulletin-board.git](https://github.com/KanshoVector/Nostalgic-bulletin-board.git)
 cd Nostalgic-bulletin-board
+
+# 2. 環境変数ファイルの準備
 cp .env.example .env
 docker compose up -d --build
-```
 
 ブラウザで http://localhost:8080/register.php からユーザー登録後、利用できます。
 
@@ -81,16 +83,6 @@ cp db_config_local.php.example db_config_local.php
 ```
 
 `db_config_local.php` を大学サーバーの **`db.php` と同じ階層（public_html 直下）** にアップロードし、接続情報を記述します。
-
-```php
-<?php
-return [
-    'host' => 'localhost',
-    'db'   => 's2422073',
-    'user' => 's2422073',
-    'pass' => 'TVDa8jmA',  // 大学 DB パスワード
-];
-```
 
 > **セキュリティ:** このファイルは `.gitignore` により GitHub には送信されません。  
 > アプリ本体（`.php`）を何度上書きアップロードしても、`db_config_local.php` はサーバー上に残る限り DB 接続は維持されます。
