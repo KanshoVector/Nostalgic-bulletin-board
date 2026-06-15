@@ -1,0 +1,38 @@
+name: kaiko-board
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-board_db}
+      POSTGRES_USER: ${POSTGRES_USER:-board_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-board_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB:-board_db}
+      POSTGRES_USER: ${POSTGRES_USER:-board_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-board_pass}
+    volumes:
+      - ./uploads:/var/www/html/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

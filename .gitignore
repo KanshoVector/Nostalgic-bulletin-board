@@ -1,0 +1,18 @@
+# 環境変数・秘匿設定
+.env
+.env.*
+!.env.example
+db_config_local.php
+*local.php
+!db_config_local.php.example
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+
+# Docker 永続データ
+docker/db_data/
+
+# アップロード済みユーザー画像
+uploads/*
+!uploads/.gitkeep
