@@ -40,6 +40,8 @@ GitHub Actions により、コミット・PR 時に全 PHP ファイルの構文
 ## ローカル起動手順
 
 ```bash
+git clone https://github.com/KanshoVector/Nostalgic-bulletin-board.git
+cd Nostalgic-bulletin-board
 cp .env.example .env
 docker compose up -d --build
 ```
